@@ -1,0 +1,233 @@
+# ============================================================================
+# Agentic AI Job Application Copilot - User Settings
+# ============================================================================
+# Copy this file to config/settings.yaml and customize for YOUR preferences
+# This file is NOT secret - safe to commit to git
+# ============================================================================
+
+# ============================================================================
+# JOB SOURCES CONFIGURATION
+# ============================================================================
+sources:
+  # Greenhouse Job Board API settings
+  greenhouse:
+    enabled: true
+    # Board tokens from Greenhouse boards you want to track
+    # Find these by visiting: https://boards.greenhouse.io/{token}
+    board_tokens:
+      - graphcore          # Example: Graphcore careers board
+      - wayve              # Example: Wayve careers board
+      - synthesia          # Example: Synthesia careers board
+      # Add more as needed:
+      # - company_name_token
+      # - another_company_token
+
+# ============================================================================
+# JOB FILTERING CONFIGURATION
+# ============================================================================
+filters:
+  # UK location keywords (case-insensitive)
+  uk_keywords:
+    - "UK"
+    - "United Kingdom"
+    - "England"
+    - "Scotland"
+    - "Wales"
+    - "Northern Ireland"
+    - "London"
+    - "Cambridge"
+    - "Oxford"
+    - "Manchester"
+    - "Bristol"
+    - "Edinburgh"
+    - "Remote - UK"
+    - "Remote (UK)"
+
+  # Entry-level seniority keywords
+  entry_level_keywords:
+    - "graduate"
+    - "junior"
+    - "entry level"
+    - "entry-level"
+    - "early career"
+    - "early-career"
+    - "new grad"
+    - "newgrad"
+    - "0-2 years"
+    - "0-3 years"
+    - "recent graduate"
+    - "fresh graduate"
+
+  # AI/ML domain keywords
+  ai_ml_keywords:
+    - "machine learning"
+    - "ml engineer"
+    - "ai engineer"
+    - "artificial intelligence"
+    - "data scientist"
+    - "data science"
+    - "computer vision"
+    - "nlp"
+    - "natural language processing"
+    - "deep learning"
+    - "neural network"
+    - "pytorch"
+    - "tensorflow"
+    - "scikit-learn"
+    - "llm"
+    - "large language model"
+    - "applied ai"
+    - "ai researcher"
+    - "ml engineer"
+    - "ai systems"
+
+  # Keywords to EXCLUDE (roles you don't want)
+  exclude_keywords:
+    - "senior"
+    - "staff"
+    - "principal"
+    - "lead"
+    - "manager"
+    - "director"
+    - "head of"
+    - "10+ years"
+    - "15+ years"
+    - "20+ years"
+    - "phd required"
+    - "phd preferred"
+
+# ============================================================================
+# USER PREFERENCES
+# ============================================================================
+user_preferences:
+  # Target location for job search
+  target_location: "UK"
+
+  # Are you open to remote work?
+  remote_ok: true
+
+  # Target role types (customize for your goals)
+  role_types:
+    - "Machine Learning Engineer"
+    - "AI Engineer"
+    - "Data Scientist"
+    - "Applied AI Engineer"
+    - "ML Researcher"
+    - "AI Researcher"
+
+  # Target seniority level(s)
+  seniority:
+    - "graduate"
+    - "junior"
+
+  # Minimum match score to display (0-100)
+  # Jobs below this score are hidden (but still stored in DB)
+  min_match_score: 40
+
+# ============================================================================
+# SCHEDULER CONFIGURATION
+# ============================================================================
+scheduler:
+  # Enable/disable automated job discovery
+  enabled: true
+
+  # Daily run time (UTC, format: HH:MM)
+  # Example: 06:30 UTC = 6:30 AM UTC (7:30 AM GMT / 8:30 AM BST)
+  daily_time_utc: "06:30"
+
+  # Number of consecutive runs without seeing a job before marking it inactive
+  # (Controls how long stale jobs remain visible)
+  stale_job_threshold_runs: 7
+
+# ============================================================================
+# JOB MATCHING & SCORING CONFIGURATION
+# ============================================================================
+scoring:
+  # Weights for different scoring factors
+  # (These are the multipliers used in the scoring algorithm)
+
+  # Base skill overlap weight (max 60 points)
+  skill_overlap_base: 60
+
+  # Priority skill bonuses
+  priority_skills:
+    python: 10
+    sql: 5
+    machine_learning: 8
+    tensorflow: 8
+    pytorch: 8
+    scikit_learn: 5
+    aws: 5
+    gcp: 5
+    azure: 5
+    docker: 5
+    kubernetes: 5
+
+  # Role type match bonus
+  role_type_match: 15
+
+  # Seniority penalty (for senior roles)
+  seniority_penalty: -20
+
+  # Entry-level bonus
+  entry_level_bonus: 10
+
+  # Location bonus (for preferred locations)
+  location_bonus: 5
+
+# ============================================================================
+# STORY BANK CONFIGURATION (for future EPIC 6)
+# ============================================================================
+# Categories for behavioural interview stories
+story_categories:
+  - "Teamwork"
+  - "Leadership"
+  - "Problem Solving"
+  - "Failure"
+  - "Communication"
+  - "Initiative"
+  - "Conflict Resolution"
+  - "Technical Challenge"
+  - "Learning"
+  - "Impact"
+
+# ============================================================================
+# UI CONFIGURATION (Streamlit)
+# ============================================================================
+ui:
+  # Page title shown in browser tab
+  page_title: "Job Application Copilot"
+
+  # Page icon (emoji)
+  page_icon: "🤖"
+
+  # Initial page layout (wide or centered)
+  layout: "wide"
+
+  # Dark mode enabled?
+  theme: "dark"
+
+  # Jobs per page in dashboard
+  jobs_per_page: 20
+
+# ============================================================================
+# FEATURE FLAGS (for MVP and future features)
+# ============================================================================
+features:
+  # Job discovery and filtering (MVP core)
+  job_discovery: true
+  job_filtering: true
+  job_matching: true
+  application_tracking: true
+
+  # Content generation (post-MVP)
+  story_bank: false
+  behavioural_answer_generation: false
+  why_company_generation: false
+  cover_letter_generation: false
+
+  # Advanced features (post-MVP)
+  automatic_board_discovery: false
+  multiple_sources: false
+  multi_user_support: false
+  cv_pdf_parsing: false

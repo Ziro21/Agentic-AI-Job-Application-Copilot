@@ -1,0 +1,84 @@
+# Environment
+.env
+.env.local
+.env.*.local
+venv/
+env/
+ENV/
+.venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+.hypothesis_artifacts/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Config (local overrides)
+config/settings.yaml
+config/keywords.yaml
+
+# Streamlit
+.streamlit/
+.streamlit_cache/
+
+# Alembic
+alembic/versions/__pycache__/
+
+# IDE specific
+.vscode/settings.json
+.vscode/launch.json
+.idea/workspace.xml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+logs/
+*.csv
+output/
+temp/
+cache/

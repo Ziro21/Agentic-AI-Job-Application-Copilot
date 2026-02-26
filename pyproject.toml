@@ -1,0 +1,106 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-ai-job-copilot"
+version = "0.1.0"
+description = "Agentic AI system for discovering, analysing, and preparing applications for UK entry-level AI/ML roles"
+readme = "documentation/README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Zeyad Khalil", email = "zeyad@example.com"}
+]
+keywords = ["ai", "ml", "job-search", "automation", "uk"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Office/Business",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "SQLAlchemy>=2.0.23",
+    "psycopg2-binary>=2.9.9",
+    "alembic>=1.12.1",
+    "python-dotenv>=1.0.0",
+    "fastapi>=0.104.1",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "streamlit>=1.28.1",
+    "streamlit-option-menu>=0.3.6",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.2",
+    "lxml>=4.9.3",
+    "APScheduler>=3.10.4",
+    "pandas>=2.1.3",
+    "numpy>=1.26.2",
+    "python-json-logger>=2.0.7",
+    "python-dateutil>=2.8.2",
+    "pytz>=2023.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.3",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.1",
+    "black>=23.11.0",
+    "flake8>=6.1.0",
+    "isort>=5.12.0",
+    "mypy>=1.7.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Ziro21/Agentic-AI-Job-Application-Copilot"
+Repository = "https://github.com/Ziro21/Agentic-AI-Job-Application-Copilot.git"
+Issues = "https://github.com/Ziro21/Agentic-AI-Job-Application-Copilot/issues"
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip_gitignore = true
+known_first_party = ["agents", "pipeline", "db", "ui", "scheduler", "scripts"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_optional = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "--verbose --cov=. --cov-report=html --cov-report=term-missing"
+asyncio_mode = "auto"

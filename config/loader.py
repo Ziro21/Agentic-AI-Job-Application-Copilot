@@ -24,12 +24,11 @@ def load_env_variables() -> None:
     """
     env_file = Path(__file__).parent.parent / ".env"
     if env_file.exists():
-        load_dotenv(env_file)
-    else:
-        raise ConfigurationError(
-            f".env file not found at {env_file}. "
-            "Copy .env.example to .env and fill in your values."
-        )
+        # In local development, it's common for shells/IDEs to have stale env vars.
+        # If a .env exists, we treat it as the source of truth and override.
+        load_dotenv(env_file, override=True)
+    # If the .env file doesn't exist, we assume we're running in an environment
+    # where variables are injected via the process environment (e.g. CI/CD, containers).
 
 
 def load_settings_yaml() -> Dict[str, Any]:
@@ -146,7 +145,10 @@ def validate_config() -> bool:
         ]
         for var in required_env_vars:
             if not os.getenv(var):
-                raise ConfigurationError(f"Required environment variable '{var}' not set in .env")
+                raise ConfigurationError(
+                    f"Required environment variable '{var}' is missing. "
+                    "Set it in your environment or provide it via a local .env file."
+                )
 
         # Check settings.yaml
         settings = load_settings_yaml()

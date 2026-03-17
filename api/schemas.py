@@ -62,6 +62,7 @@ class ApplicationWithJobOut(ApplicationOut):
 
     job_title: Optional[str] = None
     company_name: Optional[str] = None
+    match_score: Optional[int] = None
 
 
 class ApplicationUpsertIn(BaseModel):

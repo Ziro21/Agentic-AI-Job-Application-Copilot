@@ -51,6 +51,7 @@ export interface Application {
 export interface ApplicationWithJob extends Application {
   job_title: string | null;
   company_name: string | null;
+  match_score: number | null;
 }
 
 export interface JobDetail {

@@ -67,6 +67,7 @@ def list_applications(
             **ApplicationOut.model_validate(r).model_dump(),
             job_title=r.job.title if r.job else None,
             company_name=r.job.company.name if r.job and r.job.company else None,
+            match_score=r.job.match_score if r.job else None,
         )
         for r in rows
     ]

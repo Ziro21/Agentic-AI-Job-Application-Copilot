@@ -1,27 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { JobRow } from "@/components/JobRow";
 import { IngestStatus } from "@/components/IngestStatus";
+import { StatStrip } from "@/components/StatStrip";
 
 export default function JobsPage() {
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [minScore, setMinScore] = useState<number | "">("");
   const [passedFiltersOnly, setPassedFiltersOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<"score_desc" | "recent_desc">("score_desc");
 
+  // Debounce search 300ms
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
   const { data, isLoading, error } = useQuery({
-    queryKey: [
-      "jobs",
-      search,
-      minScore,
-      passedFiltersOnly,
-      page,
-      sort,
-    ],
+    queryKey: ["jobs", search, minScore, passedFiltersOnly, page, sort],
     queryFn: () =>
       api.jobs.list({
         q: search || undefined,
@@ -33,27 +37,49 @@ export default function JobsPage() {
       }),
   });
 
-  const totalPages = data
-    ? Math.ceil(data.total / data.page_size)
-    : 0;
+  // Fetch all applications to show status indicator on each row
+  const { data: appsData } = useQuery({
+    queryKey: ["applications-all"],
+    queryFn: () => api.applications.list({ page_size: 200 }),
+    staleTime: 30_000,
+  });
+
+  const statusMap = useMemo(() => {
+    const map = new Map<string, string>();
+    appsData?.items.forEach((a) => map.set(a.job_id, a.status));
+    return map;
+  }, [appsData]);
+
+  const totalPages = data ? Math.ceil(data.total / data.page_size) : 0;
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold text-white">Jobs</h1>
+    <div className="mx-auto max-w-7xl px-6 py-8">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-lg font-semibold text-zinc-100">Job Discovery</h1>
+        <p className="mt-0.5 text-sm text-zinc-500">
+          UK entry-level AI/ML roles, scored and filtered
+        </p>
+      </div>
+
+      {/* KPI stats */}
+      <div className="mb-5">
+        <StatStrip />
+      </div>
+
+      {/* Last ingest status */}
+      <div className="mb-8">
         <IngestStatus />
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-4">
+      {/* Mobile filter row */}
+      <div className="mb-5 flex flex-wrap gap-3 lg:hidden">
         <input
           type="search"
-          placeholder="Search title, location, content..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="rounded border border-zinc-600 bg-zinc-800 px-3 py-2 font-mono text-sm text-zinc-100 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+          placeholder="Search jobs..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="min-w-0 flex-1 rounded border border-zinc-700/50 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 transition-colors focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
         />
         <select
           value={minScore === "" ? "all" : minScore}
@@ -62,16 +88,16 @@ export default function JobsPage() {
             setMinScore(v === "all" ? "" : Number(v));
             setPage(1);
           }}
-          className="rounded border border-zinc-600 bg-zinc-800 px-3 py-2 font-mono text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
+          className="rounded border border-zinc-700/50 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 focus:outline-none"
         >
-          <option value="all">Min score: all</option>
+          <option value="all">Any score</option>
           {[50, 60, 70, 80, 90].map((s) => (
             <option key={s} value={s}>
-              Min {s}+
+              {s}+
             </option>
           ))}
         </select>
-        <label className="flex items-center gap-2">
+        <label className="flex cursor-pointer items-center gap-2">
           <input
             type="checkbox"
             checked={passedFiltersOnly}
@@ -79,79 +105,177 @@ export default function JobsPage() {
               setPassedFiltersOnly(e.target.checked);
               setPage(1);
             }}
-            className="rounded border-zinc-600 bg-zinc-800 text-emerald-600 focus:ring-emerald-500"
+            className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500/30"
           />
-          <span className="text-sm text-zinc-400">Passed filters only</span>
+          <span className="text-sm text-zinc-400">Matched only</span>
         </label>
-        <select
-          value={sort}
-          onChange={(e) => {
-            setSort(e.target.value as "score_desc" | "recent_desc");
-            setPage(1);
-          }}
-          className="rounded border border-zinc-600 bg-zinc-800 px-3 py-2 font-mono text-sm text-zinc-100 focus:border-zinc-500 focus:outline-none"
-        >
-          <option value="score_desc">Sort: score ↓</option>
-          <option value="recent_desc">Sort: recent ↓</option>
-        </select>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="h-24 animate-pulse rounded bg-zinc-800/50"
-            />
-          ))}
-        </div>
-      ) : error ? (
-        <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-6">
-          <p className="text-red-400">Failed to load jobs: {String(error)}</p>
-          <p className="mt-2 text-sm text-zinc-500">
-            Ensure the API is running: <code className="font-mono">uvicorn api.main:app --reload</code>
-          </p>
-        </div>
-      ) : data && data.items.length === 0 ? (
-        <div className="rounded-lg border border-zinc-700/50 bg-zinc-900/50 p-12 text-center">
-          <p className="text-zinc-400">No jobs found.</p>
-          <p className="mt-2 text-sm text-zinc-500">
-            Run the Greenhouse collector to populate jobs.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="rounded-lg border border-zinc-700/50 bg-zinc-900/50">
-            {data?.items.map((job) => (
-              <JobRow key={job.id} job={job} />
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between">
-              <p className="font-mono text-sm text-zinc-500">
-                {data?.total} total • page {page} of {totalPages}
+      {/* Sidebar + job list */}
+      <div className="flex gap-8">
+        {/* Sidebar — desktop only */}
+        <aside className="hidden w-48 shrink-0 lg:block">
+          <div className="sticky top-24 space-y-5">
+            <div>
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+                Search
               </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                  className="rounded border border-zinc-600 px-3 py-1.5 text-sm text-zinc-400 hover:bg-zinc-800 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                  className="rounded border border-zinc-600 px-3 py-1.5 text-sm text-zinc-400 hover:bg-zinc-800 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
+              <input
+                type="search"
+                placeholder="Title, company, skills..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full rounded border border-zinc-700/50 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 transition-colors focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
+              />
             </div>
+
+            <div>
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+                Min score
+              </p>
+              <select
+                value={minScore === "" ? "all" : minScore}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setMinScore(v === "all" ? "" : Number(v));
+                  setPage(1);
+                }}
+                className="w-full rounded border border-zinc-700/50 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 transition-colors focus:border-indigo-500/50 focus:outline-none"
+              >
+                <option value="all">Any score</option>
+                {[50, 60, 70, 80, 90].map((s) => (
+                  <option key={s} value={s}>
+                    {s}+ / 100
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+                Sort
+              </p>
+              <select
+                value={sort}
+                onChange={(e) => {
+                  setSort(e.target.value as "score_desc" | "recent_desc");
+                  setPage(1);
+                }}
+                className="w-full rounded border border-zinc-700/50 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 transition-colors focus:border-indigo-500/50 focus:outline-none"
+              >
+                <option value="score_desc">Best match</option>
+                <option value="recent_desc">Most recent</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={passedFiltersOnly}
+                  onChange={(e) => {
+                    setPassedFiltersOnly(e.target.checked);
+                    setPage(1);
+                  }}
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500/30"
+                />
+                <div>
+                  <p className="text-sm font-medium text-zinc-300">
+                    Passed filters
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-600">
+                    UK · Entry · AI/ML
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main job list */}
+        <div className="min-w-0 flex-1">
+          {data && (
+            <p className="mb-3 font-mono text-xs text-zinc-600">
+              {data.total} job{data.total !== 1 ? "s" : ""}
+              {search && (
+                <span>
+                  {" "}
+                  matching{" "}
+                  <span className="text-zinc-500">&ldquo;{search}&rdquo;</span>
+                </span>
+              )}
+            </p>
           )}
-        </>
-      )}
+
+          {isLoading ? (
+            <div className="space-y-px">
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-[72px] animate-pulse rounded bg-zinc-900/60"
+                />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="rounded-lg border border-red-900/30 bg-red-950/20 p-6">
+              <p className="text-sm text-red-400">
+                Failed to load jobs: {String(error)}
+              </p>
+              <p className="mt-2 font-mono text-xs text-zinc-600">
+                Is the API running?{" "}
+                <code className="text-zinc-500">uvicorn api.main:app --reload</code>
+              </p>
+            </div>
+          ) : data && data.items.length === 0 ? (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-12 text-center">
+              <p className="text-sm text-zinc-400">No jobs found.</p>
+              <p className="mt-2 font-mono text-xs text-zinc-600">
+                {search || minScore !== "" || passedFiltersOnly
+                  ? "Try adjusting your filters."
+                  : "Run the Greenhouse collector to populate jobs."}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-hidden rounded-lg border border-zinc-800/60 bg-zinc-900/30">
+                {data?.items.map((job) => (
+                  <JobRow
+                    key={job.id}
+                    job={job}
+                    applicationStatus={statusMap.get(job.id)}
+                  />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-between">
+                  <p className="font-mono text-xs text-zinc-600">
+                    Page {page} of {totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page <= 1}
+                      className="cursor-pointer rounded border border-zinc-700 px-3 py-1.5 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      disabled={page >= totalPages}
+                      className="cursor-pointer rounded border border-zinc-700 px-3 py-1.5 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

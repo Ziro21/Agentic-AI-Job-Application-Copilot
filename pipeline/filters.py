@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import List
 
@@ -14,9 +15,17 @@ class FilterResult:
     reasons: List[str]
 
 
-def _contains_any(text: str, keywords: List[str]) -> bool:
+def _word_boundary_match(text: str, keywords: List[str]) -> bool:
+    """Match keywords using word boundaries to prevent substring false positives.
+    
+    e.g. 'nlp' will NOT match 'onlpremise', but WILL match 'NLP Engineer'.
+    """
     lower = text.lower()
-    return any(kw.lower() in lower for kw in keywords)
+    for kw in keywords:
+        pattern = r'\b' + re.escape(kw.lower()) + r'\b'
+        if re.search(pattern, lower):
+            return True
+    return False
 
 
 def _build_uk_keywords(cfg: dict) -> List[str]:
@@ -34,7 +43,16 @@ def _build_uk_keywords(cfg: dict) -> List[str]:
 
 
 def apply_filters(title: str, location: str | None, country: str | None, is_remote: bool, content_text: str) -> FilterResult:
-    """Apply UK / entry-level / AI-ML filters and produce human-readable reasons, leveraging structured location data."""
+    """Apply UK / entry-level / AI-ML filters with strict word-boundary matching.
+    
+    Key rules:
+    - AI/ML keywords are checked against the TITLE only (not the full body text)
+      to prevent false positives from generic mentions like "we use data" in descriptions.
+    - Entry-level keywords are checked against title + body (since seniority is often
+      mentioned in the description but not the title).
+    - Exclude keywords ACTUALLY DISQUALIFY the job — if a senior/lead keyword is found,
+      the job will NOT pass the entry-level filter.
+    """
     cfg = get_filters()
     uk_keywords = _build_uk_keywords(cfg)
     entry_keywords = cfg.get("entry_level_keywords", [])
@@ -43,27 +61,35 @@ def apply_filters(title: str, location: str | None, country: str | None, is_remo
 
     reasons: List[str] = []
 
-    combined = " ".join(
-        part for part in [title or "", location or "", content_text or ""] if part
-    )
-
-    is_excluded = _contains_any(combined, exclude_keywords)
-    if is_excluded:
-        reasons.append("Excluded senior/lead/manager keywords present")
-
-    is_uk_text = _contains_any(location or "", uk_keywords) or _contains_any(combined, uk_keywords)
-    is_uk = is_uk_text or country == "UK"
+    title_str = title or ""
+    location_str = location or ""
+    body_str = content_text or ""
     
-    if is_uk:
-        reasons.append("Matches UK location keywords or country logic")
+    # For AI/ML: match against title ONLY to prevent false positives
+    # A job titled "Software Engineer" that happens to mention "data" in the
+    # description is NOT an AI/ML role.
+    is_ai_ml = _word_boundary_match(title_str, ai_keywords)
+    if is_ai_ml:
+        reasons.append("Title matches AI/ML keywords")
 
-    is_entry = _contains_any(combined, entry_keywords)
-    if is_entry:
+    # For entry-level: match against title + body (seniority is often in the body)
+    combined_for_seniority = f"{title_str} {body_str}"
+    is_entry = _word_boundary_match(combined_for_seniority, entry_keywords)
+    
+    # Exclusion ACTUALLY DISQUALIFIES — if "senior", "lead", etc. found in title,
+    # this job is NOT entry-level regardless of other keywords
+    is_excluded = _word_boundary_match(title_str, exclude_keywords)
+    if is_excluded:
+        is_entry = False
+        reasons.append("Excluded: senior/lead/manager keyword found in title")
+    elif is_entry:
         reasons.append("Matches entry-level keywords")
 
-    is_ai_ml = _contains_any(combined, ai_keywords)
-    if is_ai_ml:
-        reasons.append("Matches AI/ML keywords")
+    # UK location check
+    is_uk_text = _word_boundary_match(location_str, uk_keywords)
+    is_uk = is_uk_text or country == "UK"
+    if is_uk:
+        reasons.append("Matches UK location keywords or country logic")
 
     return FilterResult(
         is_uk=is_uk,
@@ -71,4 +97,3 @@ def apply_filters(title: str, location: str | None, country: str | None, is_remo
         is_ai_ml=is_ai_ml,
         reasons=reasons,
     )
-

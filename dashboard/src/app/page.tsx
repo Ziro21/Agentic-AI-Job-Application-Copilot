@@ -14,7 +14,6 @@ export default function JobsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [minScore, setMinScore] = useState<number | "">("");
-  const [passedFiltersOnly, setPassedFiltersOnly] = useState(true);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<"score_desc" | "recent_desc">("score_desc");
 
@@ -28,14 +27,14 @@ export default function JobsPage() {
   }, [searchInput]);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["jobs", search, minScore, passedFiltersOnly, page, sort],
+    queryKey: ["jobs", search, minScore, page, sort],
     queryFn: () =>
       api.jobs.list({
         q: search || undefined,
         min_score: minScore !== "" ? minScore : undefined,
-        passed_filters_only: passedFiltersOnly,
+        passed_filters_only: true,
         page,
-        page_size: 200, // Expert Upgrade Validation: Rendering massive data feed natively
+        page_size: 200,
         sort,
       }),
   });
@@ -122,19 +121,6 @@ export default function JobsPage() {
             </option>
           ))}
         </select>
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            aria-label="Filter by passed algorithms only"
-            type="checkbox"
-            checked={passedFiltersOnly}
-            onChange={(e) => {
-              setPassedFiltersOnly(e.target.checked);
-              setPage(1);
-            }}
-            className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500/30"
-          />
-          <span className="text-sm text-zinc-400">Matched only</span>
-        </label>
       </div>
 
       {/* Sidebar + job list */}
@@ -196,29 +182,6 @@ export default function JobsPage() {
                 <option value="recent_desc">Most recent</option>
               </select>
             </div>
-
-            <div>
-              <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  aria-label="Toggle passed filters explicitly"
-                  type="checkbox"
-                  checked={passedFiltersOnly}
-                  onChange={(e) => {
-                    setPassedFiltersOnly(e.target.checked);
-                    setPage(1);
-                  }}
-                  className="mt-0.5 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-indigo-500 focus:ring-indigo-500/30"
-                />
-                <div>
-                  <p className="text-sm font-medium text-zinc-300">
-                    Passed filters
-                  </p>
-                  <p className="mt-0.5 text-xs text-zinc-400">
-                    UK · Entry · AI/ML
-                  </p>
-                </div>
-              </label>
-            </div>
           </div>
         </aside>
 
@@ -260,7 +223,7 @@ export default function JobsPage() {
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-12 text-center">
               <p className="text-sm text-zinc-400">No jobs found.</p>
               <p className="mt-2 font-mono text-xs text-zinc-400">
-                {search || minScore !== "" || passedFiltersOnly
+                {search || minScore !== ""
                   ? "Try adjusting your filters."
                   : "Run the Greenhouse collector to populate jobs."}
               </p>

@@ -42,3 +42,14 @@ Deep ATS inspection is achieved entirely client-side utilizing standard MV3 (Man
 3. Drag and Drop `extension-build.zip` directly onto the Chrome Viewport.
 
 *The AI Job Copilot is now successfully tracking job submissions natively securely over JWT payloads to the API running on `localhost:8000/api/v1/jobs/.../application`.*
+
+## 4. Production Secret Management (Env Injection)
+When deploying to remote cloud clusters (e.g. Kubernetes, AWS ECS, Fly.io, Render), **do not mount a local `.env` file physically**. Strict environment injection is strictly enforced.
+
+**Example Fly.io Deployment:**
+```bash
+flyctl secrets set DATABASE_URL="postgresql://user:pass@pooler..."
+```
+
+**Kubernetes (K8s) Declarative Secrets:**
+Construct isolated deployments utilizing native Base64 encoded Kubernetes `Secret` definitions mapped entirely as `envFrom` overlays on the `Deployment` manifests. Ensure database connection pools match the format expected by the `DATABASE_URL`.

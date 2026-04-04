@@ -38,7 +38,28 @@ export default function ApplicationsPage() {
         status,
         applied_at: status === "applied" ? new Date().toISOString() : undefined,
       }),
-    onSuccess: () => {
+    onMutate: async ({ jobId, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["applications", statusFilter, page] });
+      
+      const previousData = queryClient.getQueryData(["applications", statusFilter, page]);
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      queryClient.setQueryData(["applications", statusFilter, page], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          items: old.items.map((app: any) => app.job_id === jobId ? { ...app, status } : app)
+        };
+      });
+      return { previousData };
+    },
+    onError: (err, vars, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(["applications", statusFilter, page], context.previousData);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       queryClient.invalidateQueries({ queryKey: ["applications-all"] });
       queryClient.invalidateQueries({ queryKey: ["applications-count"] });

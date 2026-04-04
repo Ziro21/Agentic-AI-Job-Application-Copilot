@@ -20,8 +20,10 @@ export function JobRow({ job, applicationStatus }: JobRowProps) {
 
   return (
     <Link
-      href={`/jobs/${job.id}`}
-      className={`group block cursor-pointer border-b border-zinc-800/50 border-l-2 px-4 py-4 transition-all duration-150 hover:bg-zinc-800/25 ${borderColor}`}
+      href={`?jobId=${job.id}`}
+      shallow
+      scroll={false}
+      className={`group block cursor-pointer border-b border-zinc-800/50 border-l-2 px-4 py-4 transition-all duration-150 hover:bg-zinc-800/25 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${borderColor}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">

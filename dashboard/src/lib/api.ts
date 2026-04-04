@@ -11,10 +11,21 @@ const API_BASE =
 
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
   const res = await fetch(url, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...headers,
       ...options?.headers,
     },
   });
@@ -56,9 +67,9 @@ export const api = {
         total: number;
         page: number;
         page_size: number;
-      }>(`/api/jobs?${search}`);
+      }>(`/api/v1/jobs?${search}`);
     },
-    get: (id: string) => fetchApi<JobDetail>(`/api/jobs/${id}`),
+    get: (id: string) => fetchApi<JobDetail>(`/api/v1/jobs/${id}`),
     upsertApplication: (
       jobId: string,
       payload: {
@@ -70,7 +81,7 @@ export const api = {
         custom_fields?: Record<string, unknown>;
       }
     ) =>
-      fetchApi<Application>(`/api/jobs/${jobId}/application`, {
+      fetchApi<Application>(`/api/v1/jobs/${jobId}/application`, {
         method: "PUT",
         body: JSON.stringify(payload),
       }),
@@ -88,12 +99,12 @@ export const api = {
         total: number;
         page: number;
         page_size: number;
-      }>(`/api/applications${qs ? `?${qs}` : ""}`);
+      }>(`/api/v1/applications${qs ? `?${qs}` : ""}`);
     },
   },
 
   runs: {
-    latest: () => fetchApi<RunLog | null>("/api/runs/latest"),
+    latest: () => fetchApi<RunLog | null>("/api/v1/runs/latest"),
     list: (params?: { page?: number; page_size?: number }) => {
       const search = new URLSearchParams();
       if (params?.page) search.set("page", String(params.page));
@@ -104,7 +115,7 @@ export const api = {
         total: number;
         page: number;
         page_size: number;
-      }>(`/api/runs${qs ? `?${qs}` : ""}`);
+      }>(`/api/v1/runs${qs ? `?${qs}` : ""}`);
     },
   },
 };

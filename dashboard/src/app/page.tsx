@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { api } from "@/lib/api";
 import { JobRow } from "@/components/JobRow";
 import { IngestStatus } from "@/components/IngestStatus";
 import { StatStrip } from "@/components/StatStrip";
+import { SlideOverLoader } from "@/components/SlideOverLoader";
+import { Suspense } from "react";
 
 export default function JobsPage() {
   const [searchInput, setSearchInput] = useState("");
@@ -32,7 +35,7 @@ export default function JobsPage() {
         min_score: minScore !== "" ? minScore : undefined,
         passed_filters_only: passedFiltersOnly,
         page,
-        page_size: 20,
+        page_size: 200, // Expert Upgrade Validation: Rendering massive data feed natively
         sort,
       }),
   });
@@ -51,9 +54,29 @@ export default function JobsPage() {
   }, [appsData]);
 
   const totalPages = data ? Math.ceil(data.total / data.page_size) : 0;
+  const items = data?.items ?? [];
+  const listRef = useRef<HTMLDivElement>(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useEffect(() => {
+    if (listRef.current) {
+      setScrollMargin(listRef.current.offsetTop);
+    }
+  }, [items.length]);
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: items.length,
+    estimateSize: () => 92, // ~92px height standard
+    overscan: 10,
+    scrollMargin,
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
+      <Suspense fallback={null}>
+        <SlideOverLoader />
+      </Suspense>
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-lg font-semibold text-zinc-100">Job Discovery</h1>
@@ -237,14 +260,29 @@ export default function JobsPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-hidden rounded-lg border border-zinc-800/60 bg-zinc-900/30">
-                {data?.items.map((job) => (
-                  <JobRow
-                    key={job.id}
-                    job={job}
-                    applicationStatus={statusMap.get(job.id)}
-                  />
-                ))}
+              <div ref={listRef} className="overflow-hidden rounded-lg border border-zinc-800/60 bg-zinc-900/30 relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const job = items[virtualRow.index];
+                  return (
+                    <div
+                      key={virtualRow.key}
+                      data-index={virtualRow.index}
+                      ref={rowVirtualizer.measureElement}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      <JobRow
+                        job={job}
+                        applicationStatus={statusMap.get(job.id)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               {totalPages > 1 && (

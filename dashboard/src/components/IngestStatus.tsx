@@ -63,7 +63,7 @@ export function IngestStatus() {
         : "bg-red-500";
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-5 py-3.5">
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-5 py-3.5" aria-live="polite">
       <div className="flex flex-wrap items-center gap-6">
         <div>
           <div className="flex items-center gap-1.5">

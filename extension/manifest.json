@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Local Job Copilot ATS Filler",
+  "version": "1.0.0",
+  "description": "Zero-click ATS application autofiller connected to local Job Copilot API",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Job Copilot Automation"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "identity"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "*://boards.greenhouse.io/*",
+    "*://*.myworkdayjobs.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://boards.greenhouse.io/*/jobs/*",
+        "*://*.myworkdayjobs.com/*/job/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

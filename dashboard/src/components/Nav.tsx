@@ -42,6 +42,7 @@ export function Nav() {
     { href: "/", label: "Jobs", count: undefined as number | undefined },
     { href: "/applications", label: "Applications", count: appCount },
     { href: "/runs", label: "Runs", count: undefined as number | undefined },
+    { href: "/metrics", label: "Telemetry", count: undefined as number | undefined },
   ];
 
   return (

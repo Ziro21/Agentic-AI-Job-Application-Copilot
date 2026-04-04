@@ -16,10 +16,7 @@ class FilterResult:
 
 
 def _word_boundary_match(text: str, keywords: List[str]) -> bool:
-    """Match keywords using word boundaries to prevent substring false positives.
-    
-    e.g. 'nlp' will NOT match 'onlpremise', but WILL match 'NLP Engineer'.
-    """
+    """Match keywords using word boundaries to prevent substring false positives."""
     lower = text.lower()
     for kw in keywords:
         pattern = r'\b' + re.escape(kw.lower()) + r'\b'
@@ -36,22 +33,27 @@ def _build_uk_keywords(cfg: dict) -> List[str]:
     keywords.extend(loc.get("cities", []))
     if loc.get("allow_remote", True):
         keywords.extend(loc.get("remote_keywords", []))
-    # Fallback for legacy config with flat uk_keywords
     if not keywords:
         keywords = cfg.get("uk_keywords", [])
     return keywords
 
 
 def apply_filters(title: str, location: str | None, country: str | None, is_remote: bool, content_text: str) -> FilterResult:
-    """Apply UK / entry-level / AI-ML filters with strict word-boundary matching.
+    """Apply UK / entry-level / AI-ML filters with balanced matching.
     
-    Key rules:
-    - AI/ML keywords are checked against the TITLE only (not the full body text)
-      to prevent false positives from generic mentions like "we use data" in descriptions.
-    - Entry-level keywords are checked against title + body (since seniority is often
-      mentioned in the description but not the title).
-    - Exclude keywords ACTUALLY DISQUALIFY the job — if a senior/lead keyword is found,
-      the job will NOT pass the entry-level filter.
+    Entry-level logic (3-tier):
+      1. If title contains exclude keywords (senior, staff, lead, etc.) → NOT entry-level
+      2. If title/body contains entry keywords (junior, graduate, etc.) → IS entry-level
+      3. If title has NO seniority marker at all → IS entry-level (implicit)
+         A plain "Machine Learning Engineer" without "Senior" is open to entry-level.
+    
+    AI/ML logic:
+      - Checked against title + body, but using word-boundary matching to avoid
+        false positives from substring collisions.
+    
+    UK location logic:
+      - Checked against location field and country code.
+      - Remote keywords only match in the location field, not the body text.
     """
     cfg = get_filters()
     uk_keywords = _build_uk_keywords(cfg)
@@ -64,32 +66,37 @@ def apply_filters(title: str, location: str | None, country: str | None, is_remo
     title_str = title or ""
     location_str = location or ""
     body_str = content_text or ""
-    
-    # For AI/ML: match against title ONLY to prevent false positives
-    # A job titled "Software Engineer" that happens to mention "data" in the
-    # description is NOT an AI/ML role.
-    is_ai_ml = _word_boundary_match(title_str, ai_keywords)
+    combined = f"{title_str} {body_str}"
+
+    # ── AI/ML check: title + body with word-boundary matching ──
+    is_ai_ml = _word_boundary_match(combined, ai_keywords)
     if is_ai_ml:
-        reasons.append("Title matches AI/ML keywords")
+        reasons.append("Matches AI/ML keywords")
 
-    # For entry-level: match against title + body (seniority is often in the body)
-    combined_for_seniority = f"{title_str} {body_str}"
-    is_entry = _word_boundary_match(combined_for_seniority, entry_keywords)
-    
-    # Exclusion ACTUALLY DISQUALIFIES — if "senior", "lead", etc. found in title,
-    # this job is NOT entry-level regardless of other keywords
+    # ── Entry-level check (3-tier logic) ──
     is_excluded = _word_boundary_match(title_str, exclude_keywords)
-    if is_excluded:
-        is_entry = False
-        reasons.append("Excluded: senior/lead/manager keyword found in title")
-    elif is_entry:
-        reasons.append("Matches entry-level keywords")
+    has_entry_keyword = _word_boundary_match(combined, entry_keywords)
 
-    # UK location check
+    if is_excluded:
+        # Tier 1: Explicit senior/staff/lead → reject
+        is_entry = False
+        reasons.append("Excluded: senior/lead/staff keyword in title")
+    elif has_entry_keyword:
+        # Tier 2: Explicit junior/graduate → accept
+        is_entry = True
+        reasons.append("Matches entry-level keywords")
+    else:
+        # Tier 3: No seniority marker at all → treat as entry-level eligible
+        # A plain "Machine Learning Engineer" is open to entry-level candidates
+        is_entry = True
+        reasons.append("No seniority marker in title (implicitly entry-level eligible)")
+
+    # ── UK location check ──
+    # Only check location field for remote keywords, not the full body
     is_uk_text = _word_boundary_match(location_str, uk_keywords)
     is_uk = is_uk_text or country == "UK"
     if is_uk:
-        reasons.append("Matches UK location keywords or country logic")
+        reasons.append("Matches UK location")
 
     return FilterResult(
         is_uk=is_uk,

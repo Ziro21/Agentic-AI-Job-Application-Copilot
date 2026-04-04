@@ -26,12 +26,6 @@ function StatCard({
 }
 
 export function StatStrip() {
-  const { data: totalData } = useQuery({
-    queryKey: ["jobs-count-all"],
-    queryFn: () => api.jobs.list({ page_size: 1 }),
-    staleTime: 60_000,
-  });
-
   const { data: matchedData } = useQuery({
     queryKey: ["jobs-count-matched"],
     queryFn: () => api.jobs.list({ passed_filters_only: true, page_size: 1 }),
@@ -51,22 +45,12 @@ export function StatStrip() {
   ).length;
   const offerCount = appItems.filter((a) => a.status === "offer").length;
 
-  const matchRate =
-    totalData?.total && matchedData?.total
-      ? Math.round((matchedData.total / totalData.total) * 100)
-      : null;
-
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <StatCard
-        label="Total jobs"
-        value={totalData?.total ?? "—"}
-        sub="in database"
-      />
-      <StatCard
-        label="Matched"
+        label="Matched roles"
         value={matchedData?.total ?? "—"}
-        sub={matchRate != null ? `${matchRate}% match rate` : "pass all filters"}
+        sub="UK · entry-level · AI/ML"
         color="text-indigo-400"
       />
       <StatCard
@@ -80,6 +64,12 @@ export function StatStrip() {
         value={appsData ? activeCount : "—"}
         sub={offerCount > 0 ? `${offerCount} offer${offerCount > 1 ? "s" : ""}` : "applied & beyond"}
         color={offerCount > 0 ? "text-emerald-400" : "text-violet-400"}
+      />
+      <StatCard
+        label="Offers"
+        value={appsData ? offerCount : "—"}
+        sub="accepted"
+        color="text-emerald-400"
       />
     </div>
   );

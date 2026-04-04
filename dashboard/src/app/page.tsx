@@ -14,7 +14,7 @@ export default function JobsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [minScore, setMinScore] = useState<number | "">("");
-  const [passedFiltersOnly, setPassedFiltersOnly] = useState(false);
+  const [passedFiltersOnly, setPassedFiltersOnly] = useState(true);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<"score_desc" | "recent_desc">("score_desc");
 

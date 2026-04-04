@@ -1,0 +1,68 @@
+name: Production Deployment CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install httpx pytest pytest-cov
+        
+    - name: Execute Strict Matrix Tests
+      run: |
+        export APP_ENV=testing
+        export DATABASE_URL=sqlite:///./test.db
+        python -m pytest tests/ --cov=api --cov-report=xml
+        
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./dashboard
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: './dashboard/package-lock.json'
+        
+    - name: Install Next.js Artifacts natively
+      run: npm ci
+      
+    - name: Validate SSR/SSG Constraints
+      run: npm run build
+
+  extension-package:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Package MV3 Deliverables
+      run: |
+        cd extension
+        zip -r ../extension-build-v$GITHUB_RUN_NUMBER.zip . -x "node_modules/*" "package*" "test.js"
+        
+    - name: Store Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: chrome-extension-build
+        path: extension-build-*.zip

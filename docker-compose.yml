@@ -29,6 +29,16 @@ services:
       timeout: 3s
       retries: 5
 
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      api:
+        condition: service_started
+
   api:
     build: .
     ports:
@@ -42,6 +52,23 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+
+  db-backup:
+    image: postgres:15-alpine
+    environment:
+      PGPASSWORD: copilot_password
+    volumes:
+      - ./backups:/backups
+    command: >
+      sh -c 'while true; do 
+        echo "[Backup Sidecar] Executing autonomous snapshot of agentic_copilot volume...";
+        pg_dump -h db -U copilot_user -d agentic_copilot -F c -f /backups/dump_$$(date +%Y%m%d%H%M%S).dump; 
+        echo "[Backup Sidecar] Snapshot saved. Hibernating for 24 hours.";
+        sleep 86400; 
+      done'
+    depends_on:
+      db:
         condition: service_healthy
 
 volumes:

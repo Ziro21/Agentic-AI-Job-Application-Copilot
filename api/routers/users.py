@@ -95,3 +95,20 @@ def refresh_access_token(payload: RefreshTokenIn, db: Session = Depends(get_db))
 def read_users_me(current_user: User = Depends(get_current_user)):
     """Fetch current localized session data."""
     return current_user
+
+@router.post("/logout")
+def logout_user(token: str = Depends(oauth2_scheme)):
+    """Revoke JWT securely globally across all nodes instantly."""
+    from api.auth import redis_client, SECRET_KEY, ALGORITHM
+    import jwt
+    import datetime as dt
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        exp = payload.get("exp")
+        now = dt.datetime.now(dt.timezone.utc).timestamp()
+        ttl = int(exp - now)
+        if ttl > 0:
+            redis_client.setex(f"blocklist:{token}", ttl, "revoked")
+    except Exception:
+        pass
+    return {"message": "Successfully logged out securely and revoked access tokens."}

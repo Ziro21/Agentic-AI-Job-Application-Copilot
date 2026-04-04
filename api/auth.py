@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+import redis
 
 from api.db import get_db
 from db.models import User
@@ -16,6 +17,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "b304f5e08d6d6af0661ffb858ab42c55490b8f0ca4
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15")) # Short 15m lifetime
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "14")) # Long 14d lifetime
+
+redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Expect API v1 token location natively
@@ -51,6 +54,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    if redis_client.get(f"blocklist:{token}"):
+        raise credentials_exception
+        
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")

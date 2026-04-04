@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import uuid
 import datetime as dt
 from typing import Optional
@@ -7,8 +8,12 @@ from typing import Optional
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy_utils import StringEncryptedType
+from sqlalchemy_utils.types.encrypted.encrypted_type import AesEngine
 
 from db.base import Base
+
+AES_SECRET_KEY = os.getenv("AES_SECRET_KEY", "0123456789abcdef0123456789abcdef")
 
 
 class TimestampMixin:
@@ -222,7 +227,9 @@ class Application(Base, TimestampMixin):
     next_follow_up_at: Mapped[Optional[dt.datetime]] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True, index=True
     )
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(
+        StringEncryptedType(Text, AES_SECRET_KEY, AesEngine, 'pkcs5'), nullable=True
+    )
     custom_fields: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 
     job: Mapped["Job"] = relationship(back_populates="application")

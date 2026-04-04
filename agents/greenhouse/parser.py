@@ -1,26 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Optional
 
 from pipeline.normalize_location import normalize_location
-
-
-@dataclass
-class JobIngestPayload:
-    external_job_id: str
-    title: str
-    location_raw: Optional[str]
-    country: Optional[str]
-    is_remote: bool
-    absolute_url: str
-    updated_at_source: Optional[datetime]
-    content_html: Optional[str]
-    company_name: str
-    board_token: str
-    board_url: str
-    api_url: str
+from agents.core.schema import JobIngestPayload
 
 
 def parse_job(raw: Dict[str, Any], board_token: str) -> JobIngestPayload:

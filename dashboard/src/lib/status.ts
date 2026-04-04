@@ -44,7 +44,7 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
   },
   no_response: {
     label: "No Response",
-    pill: "bg-zinc-800/40 text-zinc-600 border border-zinc-700/20",
+    pill: "bg-zinc-800/40 text-zinc-400 border border-zinc-700/20",
     border: "border-l-zinc-700",
     dot: "bg-zinc-700",
   },

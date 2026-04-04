@@ -20,7 +20,7 @@ function StatCard({
         {value}
       </p>
       <p className="text-xs font-medium text-zinc-400">{label}</p>
-      {sub && <p className="font-mono text-[10px] text-zinc-600">{sub}</p>}
+      {sub && <p className="font-mono text-[10px] text-zinc-400">{sub}</p>}
     </div>
   );
 }

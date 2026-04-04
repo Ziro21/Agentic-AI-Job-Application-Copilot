@@ -16,7 +16,7 @@ function Stat({
   return (
     <div className="text-center">
       <p className={`font-mono text-sm font-semibold tabular-nums ${color}`}>{value}</p>
-      <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+      <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-zinc-400">
         {label}
       </p>
     </div>
@@ -74,7 +74,7 @@ export function IngestStatus() {
               {data.status}
             </p>
           </div>
-          <p className="mt-0.5 font-mono text-[10px] text-zinc-600">
+          <p className="mt-0.5 font-mono text-[10px] text-zinc-400">
             {formatDistanceToNow(new Date(data.started_at), { addSuffix: true })}
           </p>
         </div>
@@ -94,7 +94,7 @@ export function IngestStatus() {
 
       {data.errors_sample && data.errors_sample.length > 0 && (
         <details className="mt-3 border-t border-zinc-800 pt-3">
-          <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wider text-zinc-600 hover:text-zinc-500">
+          <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wider text-zinc-400 hover:text-zinc-300">
             {data.errors_count} error{data.errors_count > 1 ? "s" : ""} — view details
           </summary>
           <ul className="mt-2 space-y-1 font-mono text-xs text-red-400/80">

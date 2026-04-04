@@ -48,7 +48,7 @@ export function FilterBadges({ isUk, isEntryLevel, isAiMl }: FilterBadgesProps) 
           className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium ${
             ok
               ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-              : "border border-zinc-700/30 bg-zinc-800/50 text-zinc-600"
+              : "border border-zinc-700/30 bg-zinc-800/50 text-zinc-400"
           }`}
           title={ok ? `Passed: ${label}` : `Did not pass: ${label}`}
         >

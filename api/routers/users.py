@@ -13,7 +13,8 @@ from api.auth import (
     get_password_hash, 
     verify_password,
     get_current_user, 
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    oauth2_scheme,
 )
 
 router = APIRouter(tags=["Users"])

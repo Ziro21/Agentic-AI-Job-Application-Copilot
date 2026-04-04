@@ -80,7 +80,7 @@ export default function JobsPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-lg font-semibold text-zinc-100">Job Discovery</h1>
-        <p className="mt-0.5 text-sm text-zinc-500">
+        <p className="mt-0.5 text-sm text-zinc-400">
           UK entry-level AI/ML roles, scored and filtered
         </p>
       </div>
@@ -98,6 +98,7 @@ export default function JobsPage() {
       {/* Mobile filter row */}
       <div className="mb-5 flex flex-wrap gap-3 lg:hidden">
         <input
+          aria-label="Search jobs"
           type="search"
           placeholder="Search jobs..."
           value={searchInput}
@@ -105,6 +106,7 @@ export default function JobsPage() {
           className="min-w-0 flex-1 rounded border border-zinc-700/50 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 transition-colors focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20"
         />
         <select
+          aria-label="Minimum Match Score"
           value={minScore === "" ? "all" : minScore}
           onChange={(e) => {
             const v = e.target.value;
@@ -122,6 +124,7 @@ export default function JobsPage() {
         </select>
         <label className="flex cursor-pointer items-center gap-2">
           <input
+            aria-label="Filter by passed algorithms only"
             type="checkbox"
             checked={passedFiltersOnly}
             onChange={(e) => {
@@ -140,10 +143,11 @@ export default function JobsPage() {
         <aside className="hidden w-48 shrink-0 lg:block">
           <div className="sticky top-24 space-y-5">
             <div>
-              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                 Search
               </p>
               <input
+                aria-label="Search titles and companies"
                 type="search"
                 placeholder="Title, company, skills..."
                 value={searchInput}
@@ -153,10 +157,11 @@ export default function JobsPage() {
             </div>
 
             <div>
-              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                 Min score
               </p>
               <select
+                aria-label="Sidebar Minimum Score"
                 value={minScore === "" ? "all" : minScore}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -175,10 +180,11 @@ export default function JobsPage() {
             </div>
 
             <div>
-              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                 Sort
               </p>
               <select
+                aria-label="Sort configurations"
                 value={sort}
                 onChange={(e) => {
                   setSort(e.target.value as "score_desc" | "recent_desc");
@@ -194,6 +200,7 @@ export default function JobsPage() {
             <div>
               <label className="flex cursor-pointer items-start gap-3">
                 <input
+                  aria-label="Toggle passed filters explicitly"
                   type="checkbox"
                   checked={passedFiltersOnly}
                   onChange={(e) => {
@@ -206,7 +213,7 @@ export default function JobsPage() {
                   <p className="text-sm font-medium text-zinc-300">
                     Passed filters
                   </p>
-                  <p className="mt-0.5 text-xs text-zinc-600">
+                  <p className="mt-0.5 text-xs text-zinc-400">
                     UK · Entry · AI/ML
                   </p>
                 </div>
@@ -218,13 +225,13 @@ export default function JobsPage() {
         {/* Main job list */}
         <div className="min-w-0 flex-1">
           {data && (
-            <p className="mb-3 font-mono text-xs text-zinc-600">
+            <p className="mb-3 font-mono text-xs text-zinc-400">
               {data.total} job{data.total !== 1 ? "s" : ""}
               {search && (
                 <span>
                   {" "}
                   matching{" "}
-                  <span className="text-zinc-500">&ldquo;{search}&rdquo;</span>
+                  <span className="text-zinc-400">&ldquo;{search}&rdquo;</span>
                 </span>
               )}
             </p>
@@ -244,15 +251,15 @@ export default function JobsPage() {
               <p className="text-sm text-red-400">
                 Failed to load jobs: {String(error)}
               </p>
-              <p className="mt-2 font-mono text-xs text-zinc-600">
+              <p className="mt-2 font-mono text-xs text-zinc-400">
                 Is the API running?{" "}
-                <code className="text-zinc-500">uvicorn api.main:app --reload</code>
+                <code className="text-zinc-400">uvicorn api.main:app --reload</code>
               </p>
             </div>
           ) : data && data.items.length === 0 ? (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-12 text-center">
               <p className="text-sm text-zinc-400">No jobs found.</p>
-              <p className="mt-2 font-mono text-xs text-zinc-600">
+              <p className="mt-2 font-mono text-xs text-zinc-400">
                 {search || minScore !== "" || passedFiltersOnly
                   ? "Try adjusting your filters."
                   : "Run the Greenhouse collector to populate jobs."}
@@ -287,7 +294,7 @@ export default function JobsPage() {
 
               {totalPages > 1 && (
                 <div className="mt-6 flex items-center justify-between">
-                  <p className="font-mono text-xs text-zinc-600">
+                  <p className="font-mono text-xs text-zinc-400">
                     Page {page} of {totalPages}
                   </p>
                   <div className="flex gap-2">

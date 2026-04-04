@@ -28,12 +28,12 @@ export function JobRow({ job, applicationStatus }: JobRowProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-medium text-zinc-100 transition-colors group-hover:text-white">
+            <h2 className="font-medium text-zinc-100 transition-colors group-hover:text-white">
               {job.title}
-            </h3>
+            </h2>
             {applicationStatus && <StatusBadge status={applicationStatus} />}
           </div>
-          <p className="mt-0.5 font-mono text-sm text-zinc-500">
+          <p className="mt-0.5 font-mono text-sm text-zinc-400">
             {job.company_name}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -44,7 +44,7 @@ export function JobRow({ job, applicationStatus }: JobRowProps) {
               isAiMl={job.filter_is_ai_ml}
             />
             {job.location_raw && (
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-zinc-400">
                 {job.location_raw}
                 {job.is_remote && (
                   <span className="ml-1 text-emerald-500/70">· Remote</span>
@@ -54,11 +54,11 @@ export function JobRow({ job, applicationStatus }: JobRowProps) {
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <p className="font-mono text-xs text-zinc-600 transition-colors group-hover:text-zinc-500">
+          <p className="font-mono text-xs text-zinc-400 transition-colors group-hover:text-zinc-300">
             {formatDistanceToNow(new Date(job.last_seen_at), { addSuffix: true })}
           </p>
           {!job.is_active && (
-            <p className="mt-1 font-mono text-[10px] text-zinc-700">inactive</p>
+            <p className="mt-1 font-mono text-[10px] text-zinc-500">inactive</p>
           )}
         </div>
       </div>

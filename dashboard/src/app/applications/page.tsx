@@ -81,7 +81,7 @@ export default function ApplicationsPage() {
     <div className="mx-auto max-w-6xl px-6 py-8">
       <div className="mb-6">
         <h1 className="text-lg font-semibold text-zinc-100">Applications</h1>
-        <p className="mt-0.5 text-sm text-zinc-500">Track your job application pipeline</p>
+        <p className="mt-0.5 text-sm text-zinc-400">Track your job application pipeline</p>
       </div>
 
       {/* Pipeline summary */}
@@ -111,7 +111,7 @@ export default function ApplicationsPage() {
           className={`cursor-pointer rounded px-3 py-1.5 text-sm transition-colors ${
             !statusFilter
               ? "bg-zinc-700 text-white"
-              : "border border-zinc-700/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
+              : "border border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
           }`}
         >
           All
@@ -125,7 +125,7 @@ export default function ApplicationsPage() {
               className={`cursor-pointer rounded px-3 py-1.5 text-sm transition-colors ${
                 statusFilter === s
                   ? cfg.pill
-                  : "border border-zinc-700/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
+                  : "border border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
               }`}
             >
               {cfg.label}
@@ -147,7 +147,7 @@ export default function ApplicationsPage() {
       ) : data && data.items.length === 0 ? (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-12 text-center">
           <p className="text-sm text-zinc-400">No applications yet.</p>
-          <p className="mt-2 font-mono text-xs text-zinc-600">
+          <p className="mt-2 font-mono text-xs text-zinc-400">
             Save or apply to jobs from the Jobs page.
           </p>
         </div>
@@ -157,16 +157,16 @@ export default function ApplicationsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-800">
-                  <th className="px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+                  <th className="px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                     Job / Company
                   </th>
-                  <th className="px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+                  <th className="px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                     Score
                   </th>
-                  <th className="px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+                  <th className="px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+                  <th className="px-4 py-3 text-left font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                     Applied
                   </th>
                 </tr>
@@ -184,7 +184,7 @@ export default function ApplicationsPage() {
                       >
                         {app.job_title || "—"}
                       </Link>
-                      <p className="mt-0.5 font-mono text-xs text-zinc-600">
+                      <p className="mt-0.5 font-mono text-xs text-zinc-400">
                         {app.company_name || "—"}
                       </p>
                     </td>
@@ -199,6 +199,7 @@ export default function ApplicationsPage() {
                       <div className="flex items-center gap-2">
                         <StatusBadge status={app.status} />
                         <select
+                          aria-label="Update application lifecycle status"
                           value={app.status}
                           onChange={(e) =>
                             updateStatus.mutate({
@@ -217,7 +218,7 @@ export default function ApplicationsPage() {
                         </select>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-zinc-600">
+                    <td className="px-4 py-3 font-mono text-xs text-zinc-400">
                       {app.applied_at
                         ? format(new Date(app.applied_at), "PP")
                         : "—"}
@@ -230,7 +231,7 @@ export default function ApplicationsPage() {
 
           {totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between">
-              <p className="font-mono text-xs text-zinc-600">
+              <p className="font-mono text-xs text-zinc-400">
                 {data?.total} total · page {page} of {totalPages}
               </p>
               <div className="flex gap-2">

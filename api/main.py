@@ -9,9 +9,21 @@ from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
 from api.db import get_db
 from api.routers import applications, jobs, metrics, runs, boards, users, exports
 from api.middleware import RequestTrackingMiddleware
+
+# OpenTelemetry Global Bindings natively exporting Trace Matrix to Datadog/Jaeger nodes
+provider = TracerProvider()
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True))
+provider.add_span_processor(processor)
+trace.set_tracer_provider(provider)
 
 
 app = FastAPI(
@@ -56,6 +68,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Bind OTel Automatic Application Instrumentation globally
+FastAPIInstrumentor.instrument_app(app)
 
 @app.get("/healthz")
 def healthz() -> dict[str, str]:

@@ -14,50 +14,221 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Job description HTML rendering */
+/* ============================================================================
+   Enterprise-Grade Job Description Renderer
+   - Handles raw Greenhouse HTML (p, ul, ol, li, strong, a, h1-h6, tables)
+   - Professional dark-mode typography
+   - Responsive, accessible, and production-ready
+   ============================================================================ */
+
+.job-description {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: #a1a1aa; /* zinc-400 */
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ── Headings ── */
 .job-description h1,
 .job-description h2,
 .job-description h3,
-.job-description h4 {
-  color: #e4e4e7;
+.job-description h4,
+.job-description h5,
+.job-description h6 {
+  color: #e4e4e7; /* zinc-200 */
   font-weight: 600;
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
   margin-bottom: 0.5rem;
   line-height: 1.4;
 }
-.job-description h1 { font-size: 1.0625rem; }
-.job-description h2 { font-size: 0.9375rem; }
-.job-description h3 { font-size: 0.875rem; }
 
+.job-description h1 { font-size: 1.125rem; }
+.job-description h2 { font-size: 1.0625rem; }
+.job-description h3 { font-size: 1rem; }
+.job-description h4 { font-size: 0.9375rem; }
+.job-description h5,
+.job-description h6 { font-size: 0.875rem; }
+
+/* First heading shouldn't have top margin */
+.job-description > h1:first-child,
+.job-description > h2:first-child,
+.job-description > h3:first-child,
+.job-description > h4:first-child,
+.job-description > div:first-child h1,
+.job-description > div:first-child h2,
+.job-description > div:first-child h3,
+.job-description > div:first-child h4 {
+  margin-top: 0;
+}
+
+/* ── Paragraphs ── */
 .job-description p {
   color: #a1a1aa;
   font-size: 0.875rem;
-  line-height: 1.7;
+  line-height: 1.75;
   margin-bottom: 0.75rem;
 }
 
+/* Remove margin from last paragraph */
+.job-description p:last-child {
+  margin-bottom: 0;
+}
+
+/* Empty paragraphs (used as spacers by Greenhouse) */
+.job-description p:empty {
+  display: none;
+}
+
+/* ── Lists ── */
 .job-description ul,
 .job-description ol {
   color: #a1a1aa;
   font-size: 0.875rem;
-  line-height: 1.7;
-  margin-bottom: 0.75rem;
-  padding-left: 1.25rem;
+  line-height: 1.75;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
 }
+
 .job-description ul { list-style-type: disc; }
 .job-description ol { list-style-type: decimal; }
 
-.job-description li { margin-bottom: 0.2rem; }
+.job-description li {
+  margin-bottom: 0.375rem;
+  padding-left: 0.25rem;
+}
 
+.job-description li::marker {
+  color: #52525b; /* zinc-600 — subtle marker */
+}
+
+/* Nested lists */
+.job-description li ul,
+.job-description li ol {
+  margin-top: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+.job-description li ul { list-style-type: circle; }
+
+/* ── Bold / Strong ── */
 .job-description strong,
 .job-description b {
+  color: #d4d4d8; /* zinc-300 */
+  font-weight: 600;
+}
+
+/* ── Links ── */
+.job-description a {
+  color: #818cf8; /* indigo-400 */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(129, 140, 248, 0.3);
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.job-description a:hover {
+  color: #a5b4fc;
+  text-decoration-color: rgba(165, 180, 252, 0.6);
+}
+
+/* ── Blockquotes ── */
+.job-description blockquote {
+  border-left: 3px solid #3f3f46; /* zinc-700 */
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #a1a1aa;
+  font-style: italic;
+}
+
+/* ── Horizontal rules ── */
+.job-description hr {
+  border: none;
+  border-top: 1px solid #27272a; /* zinc-800 */
+  margin: 1.5rem 0;
+}
+
+/* ── Tables (some Greenhouse descriptions use them) ── */
+.job-description table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.8125rem;
+}
+
+.job-description th,
+.job-description td {
+  border: 1px solid #27272a;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.job-description th {
+  background: rgba(39, 39, 42, 0.5);
   color: #d4d4d8;
   font-weight: 600;
 }
 
-.job-description a {
-  color: #818cf8;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+.job-description td {
+  color: #a1a1aa;
 }
-.job-description a:hover { color: #a5b4fc; }
+
+/* ── Inline code ── */
+.job-description code {
+  background: rgba(39, 39, 42, 0.6);
+  border: 1px solid #3f3f46;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: #d4d4d8;
+}
+
+/* ── Images (some JDs embed them) ── */
+.job-description img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* ── Iframes (embedded videos, rare) ── */
+.job-description iframe {
+  max-width: 100%;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* ── Greenhouse-specific divs ── */
+.job-description .content-intro,
+.job-description .content-conclusion {
+  margin-bottom: 1rem;
+}
+
+/* ── Cleanup: remove excess spacing from double-wrapped elements ── */
+.job-description div > p:first-child {
+  margin-top: 0;
+}
+
+.job-description div > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Emphasis ── */
+.job-description em,
+.job-description i {
+  font-style: italic;
+  color: #b4b4bb;
+}
+
+/* ── Superscript / Subscript ── */
+.job-description sup { vertical-align: super; font-size: 0.75em; }
+.job-description sub { vertical-align: sub; font-size: 0.75em; }
+
+/* ── Accessibility: respect reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .job-description a {
+    transition: none;
+  }
+}

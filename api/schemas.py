@@ -4,7 +4,7 @@ import datetime as dt
 import uuid
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from pydantic.config import ConfigDict
 
 
@@ -126,6 +126,20 @@ class JobDetailOut(BaseModel):
     application_url: Optional[str] = None
     content_text: Optional[str] = None
     content_html: Optional[str] = None
+
+    @field_validator("content_html", mode="before")
+    @classmethod
+    def decode_html_entities(cls, v: str | None) -> str | None:
+        """Greenhouse HTML is sometimes stored double-encoded. Decode entities."""
+        if not v:
+            return v
+        import html
+        # Decode once — if already clean, this is a no-op
+        decoded = html.unescape(v)
+        # Safety: if it was triple-encoded, decode again
+        if "&lt;" in decoded or "&gt;" in decoded or "&amp;" in decoded:
+            decoded = html.unescape(decoded)
+        return decoded
     filter_is_uk: bool
     filter_is_entry_level: bool
     filter_is_ai_ml: bool

@@ -34,16 +34,23 @@ from fastapi_cache.backends.inmemory import InMemoryBackend
 async def startup():
     FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+import os
+cors_origins_env = os.getenv("CORS_ORIGINS")
+if cors_origins_env:
+    origins = [o.strip() for o in cors_origins_env.split(",")]
+else:
+    origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
         "http://localhost:3002",
         "http://127.0.0.1:3002",
-    ],
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

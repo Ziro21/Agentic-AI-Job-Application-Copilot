@@ -127,8 +127,8 @@ Open http://localhost:3000. API must be running on port 8000.
 - **Streamlit** — Original docs mention Streamlit; we use Next.js instead.
 - **User profile seed** — DB schema exists for user_profile; no seed script.
 - **Story bank / content generation** — Post-MVP (behavioural answers, cover letters).
-- **Dedupe module** — Deduplication is via `absolute_url` unique constraint; no separate `pipeline/dedupe.py`.
-- **job_sources table** — Not in current migrations; jobs link to boards only.
+- **Dedupe module** — `pipeline/dedupe.py`: `content_hash` (SHA-256 of normalized text), `dedupe_key_secondary` (company + title + location) for cross-URL merge; primary key remains `absolute_url`.
+- **job_sources table** — Migration `0003_dedupe_job_sources`; Greenhouse rows synced in collector (`source_type=greenhouse`, `source_url=absolute_url`).
 
 ---
 

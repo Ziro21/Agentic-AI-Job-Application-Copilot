@@ -63,6 +63,12 @@ def compute_score(title: str, location: str | None, content_text: str) -> ScoreR
         score += role_weight
         reasons.append(f"Title matches target role types (+{role_weight})")
 
+    # Data Quality penalty
+    if len(text) < 100:
+        penalty = 20
+        score -= penalty
+        reasons.append(f"Red flag: Unusually short or missing job description (-{penalty})")
+
     # Seniority penalty
     senior_terms = ["senior", "staff", "principal", "lead", "manager", "head of"]
     if any(term in title_lower or term in text for term in senior_terms):

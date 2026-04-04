@@ -4,12 +4,16 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+from pipeline.normalize_location import normalize_location
+
 
 @dataclass
 class JobIngestPayload:
     external_job_id: str
     title: str
     location_raw: Optional[str]
+    country: Optional[str]
+    is_remote: bool
     absolute_url: str
     updated_at_source: Optional[datetime]
     content_html: Optional[str]
@@ -25,6 +29,7 @@ def parse_job(raw: Dict[str, Any], board_token: str) -> JobIngestPayload:
     title = (raw.get("title") or "").strip()
     location = raw.get("location") or {}
     location_raw = location.get("name")
+    country, is_remote = normalize_location(location_raw)
     absolute_url = (raw.get("absolute_url") or "").strip()
     updated_at_raw = raw.get("updated_at") or raw.get("updated_on")
     updated_at: Optional[datetime] = None
@@ -45,6 +50,8 @@ def parse_job(raw: Dict[str, Any], board_token: str) -> JobIngestPayload:
         external_job_id=job_id,
         title=title,
         location_raw=location_raw,
+        country=country,
+        is_remote=is_remote,
         absolute_url=absolute_url,
         updated_at_source=updated_at,
         content_html=content_html,

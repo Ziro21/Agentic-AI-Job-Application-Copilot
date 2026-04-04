@@ -71,7 +71,8 @@ Canonical job record (deduped).
 | application_url | text | null | often same as absolute_url |
 | content_html | text | null | raw HTML (may be large) |
 | content_text | text | null | plain text |
-| content_hash | text | null | hash of content_text |
+| content_hash | text | null | SHA-256 hex of normalized `content_text` |
+| dedupe_key_secondary | text | null | SHA-256 hex of company_id + title + location (cross-URL dedupe) |
 | posted_at | timestamptz | null | if available |
 | updated_at_source | timestamptz | null | Greenhouse updated_at |
 | discovered_at | timestamptz | not null default now() | when we first saw it |

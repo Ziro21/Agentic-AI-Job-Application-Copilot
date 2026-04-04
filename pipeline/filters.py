@@ -33,8 +33,8 @@ def _build_uk_keywords(cfg: dict) -> List[str]:
     return keywords
 
 
-def apply_filters(title: str, location: str | None, content_text: str) -> FilterResult:
-    """Apply UK / entry-level / AI-ML filters and produce human-readable reasons."""
+def apply_filters(title: str, location: str | None, country: str | None, is_remote: bool, content_text: str) -> FilterResult:
+    """Apply UK / entry-level / AI-ML filters and produce human-readable reasons, leveraging structured location data."""
     cfg = get_filters()
     uk_keywords = _build_uk_keywords(cfg)
     entry_keywords = cfg.get("entry_level_keywords", [])
@@ -51,9 +51,11 @@ def apply_filters(title: str, location: str | None, content_text: str) -> Filter
     if is_excluded:
         reasons.append("Excluded senior/lead/manager keywords present")
 
-    is_uk = _contains_any(location or "", uk_keywords) or _contains_any(combined, uk_keywords)
+    is_uk_text = _contains_any(location or "", uk_keywords) or _contains_any(combined, uk_keywords)
+    is_uk = is_uk_text or country == "UK"
+    
     if is_uk:
-        reasons.append("Matches UK location keywords")
+        reasons.append("Matches UK location keywords or country logic")
 
     is_entry = _contains_any(combined, entry_keywords)
     if is_entry:

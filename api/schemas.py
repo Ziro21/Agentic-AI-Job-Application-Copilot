@@ -4,8 +4,28 @@ import datetime as dt
 import uuid
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from pydantic.config import ConfigDict
+
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token: Optional[str] = None
+    token_type: str
+
+class RefreshTokenIn(BaseModel):
+    refresh_token: str
+
+class UserBase(BaseModel):
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str
+
+class UserOut(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    is_active: bool
 
 
 class RunLogOut(BaseModel):

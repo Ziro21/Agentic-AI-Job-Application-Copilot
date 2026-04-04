@@ -4,7 +4,7 @@ import uuid
 import datetime as dt
 from typing import Optional
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -21,6 +21,33 @@ class TimestampMixin:
         onupdate=func.now(),
         nullable=False,
     )
+
+
+class User(Base, TimestampMixin):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+
+    profile: Mapped["UserProfile"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
+    applications: Mapped[list["Application"]] = relationship(back_populates="user")
+    run_logs: Mapped[list["RunLog"]] = relationship(back_populates="user")
+
+
+class UserProfile(Base, TimestampMixin):
+    __tablename__ = "user_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    
+    webhook_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    target_role_types: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    target_locations: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+    
+    user: Mapped["User"] = relationship(back_populates="profile")
 
 
 class Company(Base, TimestampMixin):
@@ -84,6 +111,7 @@ class Job(Base, TimestampMixin):
     content_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     content_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     content_hash: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    dedupe_key_secondary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     posted_at: Mapped[Optional[dt.datetime]] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     updated_at_source: Mapped[Optional[dt.datetime]] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
@@ -93,6 +121,7 @@ class Job(Base, TimestampMixin):
     last_seen_at: Mapped[dt.datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False, index=True
     )
+    missed_runs: Mapped[int] = mapped_column(Integer, nullable=False, default=0, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
 
     filter_is_uk: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
@@ -103,15 +132,51 @@ class Job(Base, TimestampMixin):
     match_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0, index=True)
     match_reasons: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
 
+    data_quality_flags: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+    required_yoe: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    extracted_skills: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb"))
+
     company: Mapped["Company"] = relationship(back_populates="jobs")
     board: Mapped[Optional["Board"]] = relationship(back_populates="jobs")
     application: Mapped[Optional["Application"]] = relationship(back_populates="job")
+    sources: Mapped[list["JobSource"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan"
+    )
+
+
+class JobSource(Base):
+    """Discovery URL per source type (multi-source traceability)."""
+
+    __tablename__ = "job_sources"
+
+    __table_args__ = (UniqueConstraint("source_type", "source_url", name="uq_job_sources_source_type_url"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_type: Mapped[str] = mapped_column(Text, nullable=False)
+    source_url: Mapped[str] = mapped_column(Text, nullable=False)
+    discovered_at: Mapped[dt.datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+    extra_metadata: Mapped[dict] = mapped_column("metadata", JSONB, nullable=False, default=dict)
+
+    created_at: Mapped[dt.datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    job: Mapped["Job"] = relationship(back_populates="sources")
 
 
 class RunLog(Base):
     __tablename__ = "run_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
     run_type: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(Text, nullable=False)  # success, partial, failed
 
@@ -125,22 +190,28 @@ class RunLog(Base):
     jobs_created: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     jobs_updated: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     jobs_deactivated: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    jobs_rejected: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     errors_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     errors_sample: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
 
     created_at: Mapped[dt.datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
     )
+    
+    user: Mapped[Optional["User"]] = relationship(back_populates="run_logs")
 
 
 class Application(Base, TimestampMixin):
     __tablename__ = "applications"
 
-    __table_args__ = (UniqueConstraint("job_id", name="uq_applications_job_id"),)
+    __table_args__ = (UniqueConstraint("job_id", "user_id", name="uq_applications_job_id_user_id"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     job_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("jobs.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
     )
     status: Mapped[str] = mapped_column(
         String(length=32), nullable=False, default="saved", index=True
@@ -155,4 +226,5 @@ class Application(Base, TimestampMixin):
     custom_fields: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 
     job: Mapped["Job"] = relationship(back_populates="application")
+    user: Mapped[Optional["User"]] = relationship(back_populates="applications")
 

@@ -192,6 +192,15 @@ story_categories:
   - "Impact"
 
 # ============================================================================
+# SCHEDULER & STALE JOBS (ingest automation)
+# ============================================================================
+scheduler:
+  # After this many consecutive ingest runs without seeing the job URL, mark is_active=false
+  stale_after_missed_runs: 7
+  # Run stale pass at end of each successful multi-board ingest (set false to disable)
+  enable_stale_job_pass: true
+
+# ============================================================================
 # UI CONFIGURATION (Streamlit)
 # ============================================================================
 ui:

@@ -7,18 +7,30 @@ from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.orm import Session
 
 from api.db import get_db
+from api.db import get_db
 from api.schemas import JobDetailOut, JobListItemOut, Paginated
 from db.models import Application, Board, Company, Job
-
+from fastapi_cache.decorator import cache
 
 router = APIRouter(tags=["jobs"])
 
-
 @router.get("/jobs", response_model=Paginated)
+@cache(expire=60)
 def list_jobs(
     q: str | None = None,
+    source: str | None = Query(
+        default=None,
+        description="Filter by source family (e.g. greenhouse), matches jobs.external_source.",
+    ),
     min_score: int | None = Query(default=None, ge=0, le=100),
-    is_active: bool | None = None,
+    is_active: bool | None = Query(
+        default=None,
+        description="If set, filter by active flag. If omitted, see include_inactive.",
+    ),
+    include_inactive: bool = Query(
+        default=False,
+        description="When false (default), only active jobs (stale jobs hidden).",
+    ),
     passed_filters_only: bool = False,
     page: int = 1,
     page_size: int = 20,
@@ -38,10 +50,14 @@ def list_jobs(
                 func.lower(Job.content_text).like(like),
             )
         )
+    if source and source.strip():
+        conditions.append(Job.external_source == source.strip())
     if min_score is not None:
         conditions.append(Job.match_score >= min_score)
     if is_active is not None:
         conditions.append(Job.is_active.is_(is_active))
+    elif not include_inactive:
+        conditions.append(Job.is_active.is_(True))
     if passed_filters_only:
         conditions.append(
             and_(Job.filter_is_uk.is_(True), Job.filter_is_entry_level.is_(True), Job.filter_is_ai_ml.is_(True))

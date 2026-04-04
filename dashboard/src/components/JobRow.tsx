@@ -58,7 +58,7 @@ export function JobRow({ job, applicationStatus }: JobRowProps) {
             {formatDistanceToNow(new Date(job.last_seen_at), { addSuffix: true })}
           </p>
           {!job.is_active && (
-            <p className="mt-1 font-mono text-[10px] text-zinc-500">inactive</p>
+            <p className="mt-1 font-mono text-[10px] text-zinc-400">inactive</p>
           )}
         </div>
       </div>

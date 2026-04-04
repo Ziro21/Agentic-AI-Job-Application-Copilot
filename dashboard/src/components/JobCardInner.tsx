@@ -126,7 +126,7 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
                 <span className="text-xs text-emerald-500/80">· Remote</span>
               )}
               {job.employment_type && (
-                <span className="text-xs text-zinc-600">{job.employment_type}</span>
+                <span className="text-xs text-zinc-400">{job.employment_type}</span>
               )}
             </div>
           </div>
@@ -150,7 +150,7 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
               {getStatusConfig(currentStatus!).label}
             </p>
             {job.application.applied_at && (
-              <p className="font-mono text-xs text-zinc-600">
+              <p className="font-mono text-xs text-zinc-400">
                 Applied {format(new Date(job.application.applied_at), "PP")}
               </p>
             )}
@@ -164,7 +164,7 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
 
         {/* Pipeline stepper */}
         <div className="mt-5">
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-zinc-600">
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-wider text-zinc-400">
             Application pipeline
           </p>
 
@@ -197,8 +197,8 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
                       isCurrent
                         ? `${cfg.pill} font-semibold`
                         : isPast
-                          ? "text-zinc-600 hover:text-zinc-400"
-                          : "border border-zinc-700/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
+                          ? "text-zinc-400 hover:text-zinc-300"
+                          : "border border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
                     }`}
                   >
                     {cfg.label}
@@ -237,7 +237,7 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
                     className={`cursor-pointer rounded px-2.5 py-1 text-xs transition-colors disabled:opacity-50 ${
                       isCurrent
                         ? cfg.pill
-                        : "border border-zinc-800 text-zinc-600 hover:border-zinc-700 hover:text-zinc-400"
+                        : "border border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
                     }`}
                   >
                     {cfg.label}
@@ -254,7 +254,7 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {job.filter_reasons.length > 0 && (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                 Filter analysis
               </p>
               <ul className="space-y-1">
@@ -268,7 +268,7 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
           )}
           {job.match_reasons.length > 0 && (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
                 Match reasons
               </p>
               <ul className="space-y-1">
@@ -285,7 +285,7 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
 
       {/* Job description */}
       <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/40 p-6">
-        <p className="mb-4 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-600">
+        <p className="mb-4 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
           Job description
         </p>
         {job.content_html ? (
@@ -298,11 +298,11 @@ export function JobCardInner({ jobId, onClose }: { jobId: string, onClose?: () =
             {job.content_text}
           </div>
         ) : (
-          <p className="text-sm text-zinc-600">No description available.</p>
+          <p className="text-sm text-zinc-400">No description available.</p>
         )}
       </div>
 
-      <p className="mt-5 font-mono text-[10px] text-zinc-700">
+      <p className="mt-5 font-mono text-[10px] text-zinc-400">
         Last seen {format(new Date(job.last_seen_at), "PPp")}
       </p>
     </div>

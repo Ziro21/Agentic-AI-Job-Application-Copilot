@@ -25,38 +25,65 @@ def _word_boundary_match(text: str, keywords: List[str]) -> bool:
     return False
 
 
-def _build_uk_keywords(cfg: dict) -> List[str]:
-    """Build UK location keywords from filters.location (countries, cities, remote)."""
-    loc = cfg.get("location", {})
-    keywords: List[str] = []
-    keywords.extend(loc.get("countries", []))
-    keywords.extend(loc.get("cities", []))
-    if loc.get("allow_remote", True):
-        keywords.extend(loc.get("remote_keywords", []))
-    if not keywords:
-        keywords = cfg.get("uk_keywords", [])
-    return keywords
+def _is_uk_location(location: str | None, country: str | None) -> tuple[bool, str]:
+    """Determine if a job is UK-based using strict location logic.
+    
+    Rules:
+    1. Explicit country code "UK" → yes
+    2. Location string contains a UK country name or city → yes
+    3. Location string contains UK-specific remote patterns like 
+       "Remote - UK", "UK Remote", "Remote (UK)" → yes
+    4. A bare "Remote" or "Hybrid" with NO UK context → NO (could be anywhere)
+    
+    Returns (is_uk, reason_string).
+    """
+    if country == "UK":
+        return True, "Country code is UK"
+    
+    loc = location or ""
+    loc_lower = loc.lower()
+    
+    # If location is empty, not UK
+    if not loc_lower.strip():
+        return False, ""
+    
+    # Direct UK country/region names
+    uk_place_keywords = [
+        "united kingdom", "england", "scotland", "wales", "northern ireland",
+        "london", "cambridge", "oxford", "manchester", "bristol",
+        "edinburgh", "birmingham", "leeds", "glasgow", "belfast",
+        "nottingham", "sheffield", "liverpool", "cardiff", "newcastle",
+        ", uk", " uk,", " uk ", "(uk)", "uk -", "- uk",
+    ]
+    
+    for kw in uk_place_keywords:
+        if kw in loc_lower:
+            return True, f"Location contains '{kw}'"
+    
+    # Check if location starts or ends with "UK"
+    loc_stripped = loc_lower.strip().rstrip(".")
+    if loc_stripped == "uk" or loc_stripped.startswith("uk ") or loc_stripped.endswith(" uk"):
+        return True, "Location is UK"
+    
+    return False, ""
 
 
 def apply_filters(title: str, location: str | None, country: str | None, is_remote: bool, content_text: str) -> FilterResult:
-    """Apply UK / entry-level / AI-ML filters with balanced matching.
+    """Apply UK / entry-level / AI-ML filters with balanced, accurate matching.
     
     Entry-level logic (3-tier):
       1. If title contains exclude keywords (senior, staff, lead, etc.) → NOT entry-level
       2. If title/body contains entry keywords (junior, graduate, etc.) → IS entry-level
       3. If title has NO seniority marker at all → IS entry-level (implicit)
-         A plain "Machine Learning Engineer" without "Senior" is open to entry-level.
     
     AI/ML logic:
-      - Checked against title + body, but using word-boundary matching to avoid
-        false positives from substring collisions.
+      - Checked against title + body with word-boundary matching.
     
     UK location logic:
-      - Checked against location field and country code.
-      - Remote keywords only match in the location field, not the body text.
+      - Strict: requires explicit UK place name or country code.
+      - Bare "Remote" or "Hybrid" without UK context does NOT pass.
     """
     cfg = get_filters()
-    uk_keywords = _build_uk_keywords(cfg)
     entry_keywords = cfg.get("entry_level_keywords", [])
     ai_keywords = cfg.get("ai_ml_keywords", [])
     exclude_keywords = cfg.get("exclude_keywords", [])
@@ -64,39 +91,32 @@ def apply_filters(title: str, location: str | None, country: str | None, is_remo
     reasons: List[str] = []
 
     title_str = title or ""
-    location_str = location or ""
     body_str = content_text or ""
     combined = f"{title_str} {body_str}"
 
-    # ── AI/ML check: title + body with word-boundary matching ──
+    # ── AI/ML check ──
     is_ai_ml = _word_boundary_match(combined, ai_keywords)
     if is_ai_ml:
         reasons.append("Matches AI/ML keywords")
 
-    # ── Entry-level check (3-tier logic) ──
+    # ── Entry-level check (3-tier) ──
     is_excluded = _word_boundary_match(title_str, exclude_keywords)
     has_entry_keyword = _word_boundary_match(combined, entry_keywords)
 
     if is_excluded:
-        # Tier 1: Explicit senior/staff/lead → reject
         is_entry = False
         reasons.append("Excluded: senior/lead/staff keyword in title")
     elif has_entry_keyword:
-        # Tier 2: Explicit junior/graduate → accept
         is_entry = True
         reasons.append("Matches entry-level keywords")
     else:
-        # Tier 3: No seniority marker at all → treat as entry-level eligible
-        # A plain "Machine Learning Engineer" is open to entry-level candidates
         is_entry = True
-        reasons.append("No seniority marker in title (implicitly entry-level eligible)")
+        reasons.append("No seniority marker (implicitly entry-level eligible)")
 
-    # ── UK location check ──
-    # Only check location field for remote keywords, not the full body
-    is_uk_text = _word_boundary_match(location_str, uk_keywords)
-    is_uk = is_uk_text or country == "UK"
+    # ── UK location check (strict) ──
+    is_uk, uk_reason = _is_uk_location(location, country)
     if is_uk:
-        reasons.append("Matches UK location")
+        reasons.append(uk_reason)
 
     return FilterResult(
         is_uk=is_uk,

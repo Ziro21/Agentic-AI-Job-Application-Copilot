@@ -83,3 +83,9 @@ logs/
 output/
 temp/
 cache/
+
+# AI tooling / agent worktrees
+.claude/
+
+# Node
+node_modules/
